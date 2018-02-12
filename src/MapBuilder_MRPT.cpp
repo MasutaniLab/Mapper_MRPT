@@ -7,6 +7,7 @@
 //#include <mrpt/slam/CMultiMetricMap.h>
 #include <mrpt/slam/CMetricMapBuilderICP.h>
 #include <mrpt/poses/CPosePDFGaussian.h>
+#include <mrpt/utils/CFileOutputStream.h>
 /*
 #include <mrpt/base.h>
 #include <mrpt/obs.h>
@@ -187,9 +188,9 @@ bool MapBuilder_MRPT::initialize(MapBuilderParam& param_)
 	else if (param.ICP_algorithm == "icpLevenbergMarquardt") {
 		m_MapBuilder.ICP_params.ICP_algorithm = icpLevenbergMarquardt;
 	}
-	else if (param.ICP_algorithm == "icpIKF") {
-		m_MapBuilder.ICP_params.ICP_algorithm = icpIKF;
-	}
+	//else if (param.ICP_algorithm == "icpIKF") {
+	//	m_MapBuilder.ICP_params.ICP_algorithm = icpIKF;
+	//}
 
 	m_MapBuilder.ICP_params.onlyClosestCorrespondences = param.ICP_onlyClosestCorrespondences;
 	m_MapBuilder.ICP_params.onlyUniqueRobust = param.ICP_onlyUniqueRobust;
@@ -329,14 +330,14 @@ bool MapBuilder_MRPT::addRange(const ssr::Range& range)
 {
 	mrpt::obs::CObservation2DRangeScanPtr observation = mrpt::obs::CObservation2DRangeScan::Create();
 	observation->rightToLeft = true;
-	observation->validRange.resize(range.size);
-	observation->scan.resize(range.size);
+	//observation->validRange.resize(range.size);
+	observation->resizeScan(range.size);
 	observation->aperture = range.aperture;
 	observation->timestamp = mrpt::system::getCurrentTime();
 	for(int i = 0;i < range.size; i++) {
-		observation->scan[i] = range.range[i];
+		observation->setScanRange(i, range.range[i]);
 		//if(observation->scan[i] > m_range_min && observation->scan[i] < m_range_max) {
-			observation->validRange[i] = 1;
+			observation->setScanRangeValidity(i, 1);
 		//} else {
 		//	observation->validRange[i] = 0;
 		//}
@@ -373,7 +374,7 @@ Pose2D MapBuilder_MRPT::getEstimatedPose()
 
 void MapBuilder_MRPT::getCurrentMap(ssr::Map& map)
 {
-  mrpt::maps::CMultiMetricMap *pMap = m_MapBuilder.getCurrentlyBuiltMetricMap();
+  const mrpt::maps::CMultiMetricMap *pMap = m_MapBuilder.getCurrentlyBuiltMetricMap();
 	if (pMap->m_gridMaps.size() == 0) {
 		std::cerr << "[MRPT] No Grid Map Error" << std::endl;
 		return;
